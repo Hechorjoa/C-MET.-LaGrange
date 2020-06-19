@@ -1,0 +1,205 @@
+
+#include<iostream>
+#include<windows.h>
+#include<iomanip>  // Manipuladores de flujo parametrizados
+#include<cmath>
+
+void gotoxy(int column, int line)
+{
+	COORD coord;
+	coord.X=column;
+	coord.Y=line;
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),coord);
+}
+
+using std::cout;
+using std::cin;
+using std::endl;
+using std::fixed;
+using std::setprecision;  // Asigna la precisión de la salida numérica.
+using std::setw;
+
+const int Row = 11;
+const int Col = 12;
+
+double MatrizA(double [Row][Col], double [Row]);
+double Gauss(double [Row][Col], int, double [Row]);
+
+int main()
+  {
+  	double x0[Row], x1[Row], dx[Row], a[Row][Col], s, d;
+   	float Es;
+   	char res;
+   	int n, i, k, niter;
+   	
+   	system("color F0");
+   	do
+   	{
+   		system("cls");
+   		gotoxy(15,2);
+   		cout<<"Programa que resuelve un sistema no lineal de ecuaciones";
+   		gotoxy(15, 3);
+   		cout<<"utilizando el Método de Nw de la matriz Jacobiana.";
+   		gotoxy(15,5);
+   		cout<<"No. de Ecuaciones: ";
+   		cin>>n;
+   		gotoxy(15,7);
+   		cout<<"Error sugerido Es = ";
+	   	cin>>Es;
+   		gotoxy(15,9);
+   		cout<<"No. de iteraciones: ";
+   		cin>>niter;
+   		gotoxy(15, 11);
+   		cout<<"Escribe el Vector inicial:"<<endl<<endl;
+   		for(i=1; i<=n; i++)
+     	{
+       		cout<<"x0("<<i<<") = "; cin>>x0[i];
+     	}
+   		k = 0;
+   		do
+     	{
+       		MatrizA(a, x0);
+       		Gauss(a, n, dx);
+			
+       		s = 0;
+       		for(i=1; i<=n; i++)
+	   		{
+	      		x1[i] = dx[i] + x0[i];
+	      		s = s + pow(dx[i],2);
+	      		x0[i] = x1[i];
+	   		}
+			
+       		d = sqrt(s);
+       		k++;
+     	}
+   		while (d > Es && k <= niter);
+
+   		if (d <= Es)
+     	{
+     		cout<<endl<<"La solucion aproximada es:"<<endl<<endl;
+			for(i=1; i<=n; i++)
+				cout<<"x1("<<i<<") = "<< setprecision(8)<<fixed<<x1[i]<<endl;
+				cout<<endl<<endl<<"Despues de "<<k-1<<" iteraciones."<<endl<<endl;
+	    		cout<<"Con una distancia de: "<<setprecision(10)<<fixed<<d<<endl<<endl;
+     	}
+   		else
+     	{
+	 		cout<<"Despues de "<<k-1<<" iteraciones no hay convergencia."<<endl<<endl;
+			for(i=1; i<=n; i++)
+			cout<<"x("<<i<<") = "<< setprecision(8)<<fixed<<x0[i]<<endl;
+		}
+		cout<<"Desea volver a ejecutar el programa(s/n): "; cin>>res;
+	}
+	while(res == 's' || res == 'S');
+   	system("pause");
+  }
+
+double MatrizA(double A[Row][Col], double x[Row])
+  {
+
+    /***** Escribe aqu¡ las ec. de la Matriz Jacobiana *****/
+
+	A[1][1] = 1;  	//pow(0.5,x[2]);
+	A[1][2] = -1; 	//x[1]*pow(0.5,x[2])*log(0.5);
+	A[1][3] = -1;
+	A[1][4] = 0;  	//-(x[1]*pow(0.5,x[2])+x[3]-160);
+	A[1][5] = 0;  	//pow(4,x[2]);
+	A[1][6] = 0;	 // x[1]*pow(4,x[2])*log(4);
+	A[1][7] = -(x(1)-x(2)-x(3)); //1;
+
+	A[2][1] = 0; 	//pow(0.5,x[2]);f
+	A[2][2] = 2*0.00752*x(2);		//)x[1]*pow(0.5,x[2])*log(0.5);
+	A[2][3] = 0;		//1;
+	A[2][4] = 1;		//-(x[1]*pow(0.5,x[2])+x[3]-160);
+	A[2][5] = 0;		//pow(4,x[2]);
+	A[2][6] = 0;		//x[1]*pow(4,x[2])*log(4);
+	A[2][7] = -(x(4)-156.6+0.00752*x(2)^2);
+
+	A[3][1] = 0;		//pow(0.5,x[2]);
+	A[3][2] = 0;		//x[1]*pow(0.5,x[2])*log(0.5);
+	A[3][3] = 2*0.00427*x(3);		//)1;
+	A[3][4] = 0;		//-(x[1]*pow(0.5,x[2])+x[3]-160);
+	A[3][5] = 1;		//pow(4,x[2]);
+	A[3][6] = 0;		//x[1]*pow(4,x[2])*log(4);
+	A[3][7] = -(x(5)-117.1+0.00427*x(3)^2);		//1;
+
+	A[4][1] = 0;		//pow(0.5,x[2]);
+	A[4][2] = 2*0.000869*125/1.278^5*x(2)^2);	//x[1]*pow(0.5,x[2])*log(0.5);
+	A[4][3] = 0;		//1;
+	A[4][4] = -2.31;		//(x[1]*pow(0.5,x[2])+x[3]-160);
+	A[4][5] = 0;		//pow(4,x[2]);
+	A[4][6] = 2.31;		//x[1]*pow(4,x[2])*log(4);
+	A[4][7] = -(2.31*(x(6)-x(4))+0.000869*125/1.278^5*x(2)^2);		//1;
+
+	A[5][1] = 0;		//pow(0.5,x[2]);
+	A[5][2] = 0;		//x[1]*pow(0.5,x[2])*log(0.5);
+	A[5][3] = 2*0.000869*125/2.067^5*x(3);		//1;
+	A[5][4] = 0;		//-(x[1]*pow(0.5,x[2])+x[3]-160);
+	A[5][5] = -2.31;		//pow(4,x[2]);
+	A[5][6] = 2.31;		//x[1]*pow(4,x[2])*log(4);
+	A[5][7] =  -(2.31*(x(6)-x(5))+0.000869*125/2.067^5*x(3)^2);		//1;
+
+	A[6][1] = 2*0.000869*145/2.469^5*x(1);		//pow(0.5,x[2]);
+	A[6][2] = 0;		//x[1]*pow(0.5,x[2])*log(0.5);
+	A[6][3] = 0;			//1;
+	A[6][4] = 0;		//-(x[1]*pow(0.5,x[2])+x[3]-160);
+	A[6][5] = 0;		//pow(4,x[2]);
+	A[6][6] = -2.31;		//x[1]*pow(4,x[2])*log(4);
+	A[6][7] = -(70-2.31*x(6)+0.000869*145/2.469^5*x(1)^2);		//1;
+
+    return A[Row][Col];
+  }
+
+double Gauss(double A[Row][Col], int n, double dx[Row])
+  {
+    int i, p, j, k, m;
+    double aux, s, q;
+
+    for(i = 1; i <= n-1; i++)
+      {
+	     p = i;
+	     while ((A[p][i]== 0) && (p <= i) && (p <= n))
+	        p++;
+	     if (p > n)
+	       {
+	  	      gotoxy(15,13);
+	          cout<<"N0 existe solución!!!!";
+	          system("pause");
+	          return 0;
+	       }
+	     if (p != i)
+	       {
+		     for(m = 1; m <= n+1; m++)
+		        {
+		           aux = A[i][m];
+		           A[i][m] = A[p][m];
+		           A[p][m] = aux;
+		        }
+	       }
+	     for(j = i+1; j <= n; j++)
+	       {
+	          q = A[j][i]/A[i][i];
+	          for(k = i; k <= n+1; k++)
+	             A[j][k] = A[j][k] - q * A[i][k];
+	       }
+      }
+    
+	if (A[n][n] == 0)
+      {
+    	gotoxy(15,8);
+    	cout<<"No existe solución unica!!!"<<endl;
+    	gotoxy(15,13);
+		system("pause");
+    	return 0;
+      }
+    
+    dx[n] = A[n][n+1]/A[n][n];
+    for(i = n-1; i >= 1; i--)
+      {
+	     s = 0;
+	     for(j=i+1; j <= n; j++)
+	        s = s + A[i][j]*dx[j];
+	     dx[i] = (A[i][n+1]-s)/A[i][i];
+      }
+    return dx[Row];
+  }
